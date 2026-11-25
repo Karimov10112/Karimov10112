@@ -118,7 +118,17 @@ def load_demo():
     }
 
 
+def local_file(key):
+    path = CFG.get(key)
+    if path and os.path.exists(os.path.join(ROOT, path)):
+        with open(os.path.join(ROOT, path), "rb") as f:
+            return f.read()
+    return None
+
+
 def derive(d):
+    d["photo"] = local_file("avatar") or d.get("avatar")
+    d["avatar"] = local_file("avatar_face") or d["photo"]
     days = d["days"][-371:]
     d["days"] = days
     counts = [c for _, c in days]
@@ -216,7 +226,8 @@ def avatar_grid(png, n):
     try:
         from PIL import Image, ImageOps
         img = Image.open(io.BytesIO(png)).convert("L")
-        img = ImageOps.autocontrast(ImageOps.fit(img, (n, n)), cutoff=2)
+        img = ImageOps.autocontrast(ImageOps.fit(img, (n, n), method=Image.LANCZOS), cutoff=1)
+        img = img.point(lambda v: int(255 * (v / 255) ** 0.75))
         return [[img.getpixel((x, y)) / 255 for x in range(n)] for y in range(n)]
     except Exception:
         g = []
@@ -251,6 +262,17 @@ def dot_portrait(d, cx, cy, R, n, color=ACC):
     return "".join(out)
 
 
+def hero_photo(d, cx, cy, R):
+    if not d.get("photo"):
+        return dot_portrait(d, cx, cy, R, 40)
+    mime = "image/png" if d["photo"][:4] == b"\x89PNG" else "image/jpeg"
+    b64 = base64.b64encode(d["photo"]).decode()
+    href = f"data:{mime};base64,{b64}"
+    return (f'<image x="{cx-R}" y="{cy-R}" width="{2*R}" height="{2*R}" href="{href}" xlink:href="{href}" '
+            f'preserveAspectRatio="xMidYMid slice" filter="url(#duo)"/>'
+            f'<rect x="{cx-R}" y="{cy-R}" width="{2*R}" height="{2*R}" fill="url(#hscan)"/>')
+
+
 # ------------------------------------------------------------------ cards
 def card_hero(d):
     uid, W, H = "h", 1000, 330
@@ -276,7 +298,16 @@ def card_hero(d):
   <stop offset=".58" stop-color="{ACC2}"/><stop offset="1" stop-color="{TXT}"/>
   <animateTransform attributeName="gradientTransform" type="translate" values="-1 0;1 0" dur="6s" repeatCount="indefinite"/>
 </linearGradient>
-<clipPath id="hav"><circle cx="{cx}" cy="{cy}" r="{R}"/></clipPath>"""
+<clipPath id="hav"><circle cx="{cx}" cy="{cy}" r="{R}"/></clipPath>
+<filter id="duo" color-interpolation-filters="sRGB">
+  <feColorMatrix type="matrix" values=".33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 1 0"/>
+  <feComponentTransfer>
+    <feFuncR type="table" tableValues="0.02 0.18 0.75 0.95"/>
+    <feFuncG type="table" tableValues="0.07 0.55 0.95 1"/>
+    <feFuncB type="table" tableValues="0.06 0.50 0.86 0.97"/>
+  </feComponentTransfer>
+</filter>
+<pattern id="hscan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1.3" fill="#000" fill-opacity=".22"/></pattern>"""
     inner = f"""
 <g opacity="0">{fade(.1)}
   <circle cx="62" cy="68" r="5" fill="{LIME}"><animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
@@ -295,7 +326,7 @@ def card_hero(d):
   stroke-dasharray="70 {2*math.pi*(R+30)-70:.0f}">
   <animateTransform attributeName="transform" type="rotate" from="0 {cx} {cy}" to="-360 {cx} {cy}" dur="9s" repeatCount="indefinite"/></circle>
 <circle cx="{cx}" cy="{cy}" r="{R+5}" fill="#061412" stroke="{ACC}" stroke-opacity=".5"/>
-<g clip-path="url(#hav)">{dot_portrait(d, cx, cy, R, 40)}
+<g clip-path="url(#hav)">{hero_photo(d, cx, cy, R)}
   <rect x="{cx-R}" y="{cy-R}" width="{2*R}" height="4" fill="{ACC2}" filter="url(#{uid}soft)">
     <animate attributeName="y" values="{cy-R};{cy+R};{cy-R}" dur="5s" repeatCount="indefinite"/></rect>
 </g>
@@ -334,10 +365,10 @@ def card_scan(d):
 <rect x="32" y="78" width="340" height="296" rx="14" fill="#051210" fill-opacity=".85"/>
 {brackets(32, 78, 340, 296)}
 {t(50, 102, "VISUAL.MAP", 11, ACC, 700, extra='letter-spacing="2.5"')}
-{t(354, 102, "dot-matrix · 48²", 11, DIM2, anchor="end")}
+{t(354, 102, "dot-matrix · 58²", 11, DIM2, anchor="end")}
 <clipPath id="sreveal"><rect x="32" y="112" width="340" height="0">
   <animate attributeName="height" from="0" to="256" dur="2.4s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".4 0 .2 1"/></rect></clipPath>
-<g clip-path="url(#sreveal)">{dot_portrait(d, 202, 240, 120, 48)}</g>
+<g clip-path="url(#sreveal)">{dot_portrait(d, 202, 240, 122, 58)}</g>
 <rect x="40" y="118" width="324" height="3" fill="{ACC2}" filter="url(#{uid}soft)" opacity="0">
   <animate attributeName="y" values="118;360;118" dur="5s" begin="2.4s" repeatCount="indefinite"/>
   <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.05;.95;1" dur="5s" begin="2.4s" repeatCount="indefinite"/></rect>

@@ -40,5 +40,7 @@
   ],
   "tagline": "Building software that helps patients and doctors in Uzbekistan.",
   "location": "Tashkent, UZ",
-  "available": "Open to collaboration"
+  "available": "Open to collaboration",
+  "avatar": "assets/avatar.jpg",
+  "avatar_face": "assets/avatar-face.jpg"
 }
