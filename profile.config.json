@@ -15,7 +15,8 @@
         "R2",
         "Claude"
       ],
-      "url": "https://www.inhayat.uz"
+      "url": "https://www.inhayat.uz",
+      "domain": "inhayat.uz"
     },
     {
       "name": "smart-monitor",
@@ -27,7 +28,17 @@
         "MongoDB",
         "Gemini"
       ],
-      "url": "https://diabetmed.uz"
+      "url": "https://diabetmed.uz",
+      "domain": "diabetmed.uz"
     }
-  ]
+  ],
+  "roles": [
+    "Full-Stack Developer",
+    "HealthTech Builder",
+    "AI Agent Engineer",
+    "Open-Source SDK Author"
+  ],
+  "tagline": "Building software that helps patients and doctors in Uzbekistan.",
+  "location": "Tashkent, UZ",
+  "available": "Open to collaboration"
 }
