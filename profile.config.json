@@ -1,0 +1,33 @@
+{
+  "username": "Karimov10112",
+  "name": "Azamatjon Karimov",
+  "role": "Full-Stack Developer | HealthTech",
+  "status": "Building | Learning | Shipping",
+  "contact": "t.me/adu_af",
+  "projects": [
+    {
+      "name": "inhayat-uz",
+      "title": "InHayat / LifeBridge",
+      "description": "Transplant-prep platform: patient site, staff portal, AI monitoring agent.",
+      "stack": [
+        "Next.js",
+        "Supabase",
+        "R2",
+        "Claude"
+      ],
+      "url": "https://www.inhayat.uz"
+    },
+    {
+      "name": "smart-monitor",
+      "title": "Smart Monitor",
+      "description": "Diabetes monitoring SDK: risk scoring, FHIR R4, AI agent, Android app.",
+      "stack": [
+        "React",
+        "Node.js",
+        "MongoDB",
+        "Gemini"
+      ],
+      "url": "https://diabetmed.uz"
+    }
+  ]
+}

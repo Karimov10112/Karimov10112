@@ -1,0 +1,41 @@
+name: Profil kartalari
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"   # har 6 soatda yangilanadi
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "profile.config.json"
+      - ".github/workflows/profile-cards.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pillow o'rnatish (avatar uchun)
+        run: pip install pillow
+
+      - name: Kartalarni yaratish
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROFILE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: python scripts/build_cards.py
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/*.svg
+          git commit -m "chore: profil kartalari yangilandi" || exit 0
+          git push
