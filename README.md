@@ -1,6 +1,6 @@
 <!-- ============ HEADER ============ -->
 <p align="center">
-  <img src="./assets/header.svg" alt="Azamatjon Karimov — Full-Stack Developer · HealthTech" width="100%"/>
+  <img src="./assets/pixel-room.svg" alt="Azamatjon Karimov — pixel dev studio" width="100%"/>
 </p>
 
 <p align="center">
