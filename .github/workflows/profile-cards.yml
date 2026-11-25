@@ -37,6 +37,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add cards/*.svg
+          git add cards/*.svg README.md
           git commit -m "chore: profil kartalari yangilandi" || exit 0
           git push

@@ -26,11 +26,29 @@
 <p align="center">
   <img src="./cards/work.svg" alt="Projects" width="100%"/>
 </p>
-<p align="center">
-  <a href="https://github.com/Karimov10112/inhayat-uz"><b>InHayat</b></a> ·
-  <a href="https://github.com/Karimov10112/smart-monitor"><b>Smart Monitor</b></a> ·
-  <a href="https://www.npmjs.com/package/@karimov_dev/diabets"><b>@karimov_dev/diabets</b></a>
-</p>
+<details open>
+<summary><b>Barcha loyihalar</b> — bosib o‘ting</summary>
+
+<!-- PROJECTS:START -->
+
+| Loyiha | Tavsif |
+|:--|:--|
+| [**inhayat-uz**](https://github.com/Karimov10112/inhayat-uz) · [demo](https://www.inhayat.uz) | Transplant-prep platform: patient site, staff portal, AI monitoring agent. |
+| [**smart-monitor**](https://github.com/Karimov10112/smart-monitor) · [demo](https://diabetmed.uz) | Diabetes monitoring SDK: risk scoring, FHIR R4, AI agent, Android app. |
+| [**farangiz**](https://github.com/Karimov10112/farangiz) | — |
+| [**Sarvinoz**](https://github.com/Karimov10112/Sarvinoz) | — |
+| [**heart-qr**](https://github.com/Karimov10112/heart-qr) | — |
+| [**sentinel**](https://github.com/Karimov10112/sentinel) | — |
+| [**phishguard**](https://github.com/Karimov10112/phishguard) | — |
+| [**netguard**](https://github.com/Karimov10112/netguard) | — |
+| [**sofia**](https://github.com/Karimov10112/sofia) | — |
+| [**CorruptStop**](https://github.com/Karimov10112/CorruptStop) | — |
+
+<!-- PROJECTS:END -->
+
+📦 npm: [**@karimov_dev/diabets**](https://www.npmjs.com/package/@karimov_dev/diabets)
+
+</details>
 
 ### ⟡ Stack
 

@@ -67,7 +67,11 @@ def load_live():
         except Exception:
             l = {}
         repo_langs[r["name"]] = l
-        repo_meta[r["name"]] = {"stars": r.get("stargazers_count", 0), "pushed": (r.get("pushed_at") or "")[:10]}
+        repo_meta[r["name"]] = {
+            "stars": r.get("stargazers_count", 0), "pushed": (r.get("pushed_at") or "")[:10],
+            "description": r.get("description") or "", "language": r.get("language") or "",
+            "homepage": r.get("homepage") or "", "url": r.get("html_url", ""), "archived": r.get("archived", False),
+        }
         for k, v in l.items():
             langs[k] = langs.get(k, 0) + v
     q = """query($login:String!){user(login:$login){contributionsCollection{
@@ -91,6 +95,7 @@ def load_live():
         "followers": user.get("followers", 0), "public_repos": user.get("public_repos", 0),
         "stars": sum(r.get("stargazers_count", 0) for r in own),
         "langs": langs, "repo_langs": repo_langs, "repo_meta": repo_meta,
+        "repo_order": [r["name"] for r in sorted(own, key=lambda r: r.get("pushed_at") or "", reverse=True)],
         "total": total, "days": days, "avatar": avatar,
         "since": (user.get("created_at") or "")[:4],
     }
@@ -113,7 +118,18 @@ def load_demo():
         "langs": {"TypeScript": 61, "JavaScript": 22, "CSS": 7, "Python": 6, "PLpgSQL": 4},
         "repo_langs": {"inhayat-uz": {"TypeScript": 92, "CSS": 6, "PLpgSQL": 2},
                        "smart-monitor": {"JavaScript": 64, "TypeScript": 33, "CSS": 3}},
-        "repo_meta": {"inhayat-uz": {"stars": 12}, "smart-monitor": {"stars": 9}},
+        "repo_meta": {
+            "inhayat-uz": {"stars": 12}, "smart-monitor": {"stars": 9},
+            "farangiz": {"stars": 2, "language": "HTML", "description": "Interactive web page project.", "pushed": "2026-11-24"},
+            "Sarvinoz": {"stars": 1, "language": "HTML", "description": "Personal web project.", "pushed": "2026-11-19"},
+            "heart-qr": {"stars": 3, "language": "JavaScript", "description": "QR code generator with heart-shaped design.", "pushed": "2026-11-15"},
+            "sentinel": {"stars": 4, "language": "Python", "description": "Security monitoring and alerting toolkit.", "pushed": "2026-11-08"},
+            "phishguard": {"stars": 5, "language": "TypeScript", "description": "Phishing URL detection and user protection.", "pushed": "2026-11-08"},
+            "netguard": {"stars": 3, "language": "Python", "description": "Network traffic monitoring and anomaly detection.", "pushed": "2026-11-08"},
+            "sofia": {"stars": 1, "language": "JavaScript", "description": "", "pushed": "2026-05-17"},
+            "CorruptStop": {"stars": 6, "language": "TypeScript", "description": "Anti-corruption reporting platform.", "homepage": "", "pushed": "2026-04-26"},
+        },
+        "repo_order": ["farangiz", "Sarvinoz", "smart-monitor", "heart-qr", "sentinel", "phishguard", "netguard", "inhayat-uz", "sofia", "CorruptStop"],
         "total": sum(c for _, c in days), "days": days, "avatar": None, "since": "2023",
     }
 
@@ -487,12 +503,45 @@ def card_activity(d):
     return frame(uid, W, H, inner, extra, label="Contribution activity", aur=.7)
 
 
+def wrap(text, n):
+    words, lines, cur = text.split(), [], ""
+    for w_ in words:
+        if cur and len(cur) + len(w_) + 1 > n:
+            lines.append(cur)
+            cur = w_
+        else:
+            cur = (cur + " " + w_).strip()
+    if cur:
+        lines.append(cur)
+    return lines or [""]
+
+
+def fmt_date(s):
+    try:
+        x = dt.date.fromisoformat(s[:10])
+        return f"{MONTHS[x.month-1]} {x.year}"
+    except Exception:
+        return "-"
+
+
+def other_repos(d):
+    featured = {p["name"].lower() for p in CFG["projects"]}
+    hidden = {n.lower() for n in CFG.get("exclude", [])} | {USER.lower()}
+    order = d.get("repo_order") or list(d.get("repo_meta", {}).keys())
+    return [n for n in order if n.lower() not in featured and n.lower() not in hidden]
+
+
 def card_work(d):
-    uid, W, H = "w", 1000, 340
+    uid, W = "w", 1000
     projs = CFG["projects"]
+    others = other_repos(d)
+    ncol, gh_, gv = 3, 16, 16
+    ch2 = 136
+    rows_ = math.ceil(len(others) / ncol)
+    H = 86 + 230 + (48 + rows_ * (ch2 + gv) if others else 0) + 26
     cw = (W - 72 - 20 * (len(projs) - 1)) / len(projs)
     parts = [t(36, 48, "PROJECTS.LIST", 13, ACC, 700, extra='letter-spacing="2.5"'), t(180, 48, "~/builds --all --live", 13, DIM2),
-             t(W - 36, 48, f"{len(projs)} shipped · in production", 12, DIM, anchor="end"),
+             t(W - 36, 48, f"{len(projs) + len(others)} repositories · {len(projs)} in production", 12, DIM, anchor="end"),
              f'<line x1="8" y1="66" x2="{W-8}" y2="66" stroke="{EDGE}" stroke-opacity=".18"/>']
     for i, p in enumerate(projs):
         x, y, ch = 36 + i * (cw + 20), 86, 230
@@ -534,6 +583,35 @@ def card_work(d):
 <g clip-path="url(#wb{i})">{''.join(segs)}</g>
 {t(x+22, y+176, lang_lbl, 11, DIM2)}
 {''.join(tags)}
+</g>""")
+    if others:
+        y0 = 86 + 230 + 48
+        parts.append(t(36, y0 - 12, "MORE.BUILDS", 11, ACC, 700, extra='letter-spacing="2.5"'))
+        parts.append(f'<line x1="150" y1="{y0-16}" x2="{W-36}" y2="{y0-16}" stroke="{EDGE}" stroke-opacity=".15"/>')
+        cw2 = (W - 72 - gh_ * (ncol - 1)) / ncol
+        for j, name in enumerate(others):
+            m = d["repo_meta"].get(name, {})
+            r_, c_ = divmod(j, ncol)
+            x, y = 36 + c_ * (cw2 + gh_), y0 + r_ * (ch2 + gv)
+            lang = m.get("language") or ""
+            lc = LANG_COLORS.get(lang, DIM)
+            desc = m.get("description") or "No description yet."
+            lines = wrap(desc, 36)[:2]
+            if len(wrap(desc, 36)) > 2:
+                lines[1] = lines[1][:33].rstrip() + "…"
+            foot = m.get("homepage", "").replace("https://", "").replace("http://", "").rstrip("/")
+            foot = ("↗ " + foot[:30]) if foot else ("updated " + fmt_date(m.get("pushed", "")))
+            badge = ""
+            if m.get("archived"):
+                badge = t(x + cw2 - 18, y + 30, "ARCHIVED", 9.5, DIM, 700, anchor="end", extra='letter-spacing="1.2"')
+            parts.append(f"""<g opacity="0">{fade(.6 + j * .08, .5, 10)}
+<rect x="{x:.1f}" y="{y}" width="{cw2:.1f}" height="{ch2}" rx="14" fill="#051210" fill-opacity=".8" stroke="{EDGE}" stroke-opacity=".2"/>
+{t(x+18, y+30, name, 15, TXT, 800, SANS)}
+{badge or t(x+cw2-18, y+30, "★ " + str(m.get("stars", 0)), 12, ACC2, 700, anchor="end")}
+{''.join(t(x+18, y+56+k*18, l, 11.5, DIM) for k, l in enumerate(lines))}
+<circle cx="{x+22:.1f}" cy="{y+ch2-22}" r="4.5" fill="{lc}"/>
+{t(x+32, y+ch2-18, lang or "—", 11, DIM2, 600)}
+{t(x+cw2-18, y+ch2-18, foot, 10.5, DIM2, anchor="end")}
 </g>""")
     return frame(uid, W, H, "".join(parts), label="Projects", aur=.7)
 
@@ -582,6 +660,31 @@ def card_languages(d):
     return frame(uid, W, H, inner, label="Language stack", aur=.7)
 
 
+def update_readme(d):
+    path = os.path.join(ROOT, "README.md")
+    a, b = "<!-- PROJECTS:START -->", "<!-- PROJECTS:END -->"
+    try:
+        text = open(path, encoding="utf-8").read()
+    except FileNotFoundError:
+        return
+    if a not in text or b not in text:
+        return
+    rows = ["| Loyiha | Tavsif | Til | ⭐ |", "|:--|:--|:--|:--:|"]
+    featured = [p["name"] for p in CFG["projects"]]
+    for name in featured + other_repos(d):
+        m = d["repo_meta"].get(name, {})
+        p = next((p for p in CFG["projects"] if p["name"] == name), None)
+        desc = (p["description"] if p else m.get("description")) or "—"
+        url = m.get("url") or f"https://github.com/{USER}/{name}"
+        home = (p and p.get("url")) or m.get("homepage") or ""
+        title = f"[**{name}**]({url})" + (f" · [demo]({home})" if home else "")
+        rows.append(f"| {title} | {desc.replace('|', '/')} | {m.get('language') or '—'} | {m.get('stars', 0)} |")
+    block = a + "\n\n" + "\n".join(rows) + "\n\n" + b
+    text = text[:text.index(a)] + block + text[text.index(b) + len(b):]
+    open(path, "w", encoding="utf-8").write(text)
+    print("README projects table updated")
+
+
 def main():
     data = derive(load_demo() if DEMO else load_live())
     os.makedirs(OUT, exist_ok=True)
@@ -594,6 +697,8 @@ def main():
         with open(os.path.join(OUT, f"{name}.svg"), "w", encoding="utf-8") as f:
             f.write(fn(data))
         print("wrote", name)
+    if not DEMO:
+        update_readme(data)
 
 
 if __name__ == "__main__":
