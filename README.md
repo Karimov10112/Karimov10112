@@ -31,18 +31,18 @@
 
 <!-- PROJECTS:START -->
 
-| Loyiha | Tavsif |
-|:--|:--|
-| [**inhayat-uz**](https://github.com/Karimov10112/inhayat-uz) · [demo](https://www.inhayat.uz) | Transplant-prep platform: patient site, staff portal, AI monitoring agent. |
-| [**smart-monitor**](https://github.com/Karimov10112/smart-monitor) · [demo](https://diabetmed.uz) | Diabetes monitoring SDK: risk scoring, FHIR R4, AI agent, Android app. |
-| [**farangiz**](https://github.com/Karimov10112/farangiz) | — |
-| [**Sarvinoz**](https://github.com/Karimov10112/Sarvinoz) | — |
-| [**heart-qr**](https://github.com/Karimov10112/heart-qr) | — |
-| [**sentinel**](https://github.com/Karimov10112/sentinel) | — |
-| [**phishguard**](https://github.com/Karimov10112/phishguard) | — |
-| [**netguard**](https://github.com/Karimov10112/netguard) | — |
-| [**sofia**](https://github.com/Karimov10112/sofia) | — |
-| [**CorruptStop**](https://github.com/Karimov10112/CorruptStop) | — |
+| Loyiha | Tavsif | Til | ⭐ |
+|:--|:--|:--|:--:|
+| [**inhayat-uz**](https://github.com/Karimov10112/inhayat-uz) · [demo](https://www.inhayat.uz) | Transplant-prep platform: patient site, staff portal, AI monitoring agent. | TypeScript | 0 |
+| [**smart-monitor**](https://github.com/Karimov10112/smart-monitor) · [demo](https://diabetmed.uz) | Diabetes monitoring SDK: risk scoring, FHIR R4, AI agent, Android app. | TypeScript | 0 |
+| [**farangiz**](https://github.com/Karimov10112/farangiz) | — | JavaScript | 0 |
+| [**Sarvinoz**](https://github.com/Karimov10112/Sarvinoz) · [demo](https://sarvinoz-steel.vercel.app) | — | JavaScript | 0 |
+| [**heart-qr**](https://github.com/Karimov10112/heart-qr) · [demo](https://heart-qr-two.vercel.app) | — | HTML | 0 |
+| [**sentinel**](https://github.com/Karimov10112/sentinel) | — | Python | 0 |
+| [**phishguard**](https://github.com/Karimov10112/phishguard) | — | Python | 0 |
+| [**netguard**](https://github.com/Karimov10112/netguard) · [demo](https://netguard-frontend.vercel.app) | — | Python | 0 |
+| [**sofia**](https://github.com/Karimov10112/sofia) · [demo](https://sofia-ruddy-three.vercel.app) | — | TypeScript | 0 |
+| [**CorruptStop**](https://github.com/Karimov10112/CorruptStop) · [demo](https://corrupt-stop.vercel.app) | — | TypeScript | 0 |
 
 <!-- PROJECTS:END -->
 
