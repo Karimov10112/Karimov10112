@@ -50,6 +50,31 @@ def fetch_bytes(url):
         return r.read()
 
 
+def readme_summary(name):
+    """First meaningful sentence of a repo README (used when the repo has no description)."""
+    import re
+    try:
+        data = api(f"/repos/{USER}/{name}/readme")
+        text = base64.b64decode(data.get("content", "")).decode("utf-8", "ignore")
+    except Exception:
+        return ""
+    text = re.sub(r"<!--.*?-->", " ", text, flags=re.S)
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith(("#", "!", "[!", "<", "|", "-", "*", ">", "```", "=")):
+            continue
+        line = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", line)
+        line = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", line)
+        line = re.sub(r"[*_`]", "", line).strip()
+        if len(line) < 15 or line.lower().startswith(("npm ", "cd ", "git ", "http")):
+            continue
+        m = re.match(r"(.{15,140}?[.!?])(\s|$)", line)
+        out = m.group(1) if m else line
+        return out[:137].rstrip() + ("…" if len(out) > 137 else "")
+    return ""
+
+
 def load_live():
     user = api(f"/users/{USER}")
     repos, page = [], 1
@@ -74,6 +99,8 @@ def load_live():
         }
         for k, v in l.items():
             langs[k] = langs.get(k, 0) + v
+        if not repo_meta[r["name"]]["description"]:
+            repo_meta[r["name"]]["description"] = readme_summary(r["name"])
     q = """query($login:String!){user(login:$login){contributionsCollection{
       contributionCalendar{totalContributions weeks{contributionDays{contributionCount date}}}}}}"""
     try:
@@ -302,8 +329,11 @@ def card_hero(d):
                         f'<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="{kt}" dur="{D}s" begin="1s" repeatCount="indefinite"/></g>')
     cx, cy, R = 822, 158, 88
     chips, x = [], 56
-    for lab in [f"★ {fmt(d['stars'])} stars", f"{fmt(d['public_repos'])} repos",
-                f"{fmt(d['followers'])} followers", f"{fmt(d['total'])} contributions"]:
+    items = [(d["stars"], f"★ {fmt(d['stars'])} stars"), (d["public_repos"], f"{fmt(d['public_repos'])} repos"),
+             (d["followers"], f"{fmt(d['followers'])} followers"), (d["total"], f"{fmt(d['total'])} contributions"),
+             (d["active"], f"{d['active']} active days")]
+    labels = [lab for v, lab in items if v][:4]
+    for lab in labels:
         s, w = chip(x, 256, lab)
         chips.append(s)
         x += w + 10
@@ -524,6 +554,13 @@ def fmt_date(s):
         return "-"
 
 
+def live_pill(x_right, y, live):
+    if not live:
+        return ""
+    return (f'<circle cx="{x_right-38:.1f}" cy="{y-4}" r="3.5" fill="{LIME}"><animate attributeName="opacity" values="1;.25;1" dur="1.6s" repeatCount="indefinite"/></circle>'
+            + t(x_right, y, "LIVE", 10.5, LIME, 700, anchor="end", extra='letter-spacing="1.4"'))
+
+
 def other_repos(d):
     featured = {p["name"].lower() for p in CFG["projects"]}
     hidden = {n.lower() for n in CFG.get("exclude", [])} | {USER.lower()}
@@ -572,9 +609,9 @@ def card_work(d):
 <rect x="{x:.1f}" y="{y}" width="{cw:.1f}" height="{ch}" rx="16" fill="#051210" fill-opacity=".85" stroke="{EDGE}" stroke-opacity=".28"/>
 {brackets(x, y, cw, ch, L=12, op=.5)}
 {t(x+22, y+32, "▸ " + p["name"], 12.5, DIM)}
-<circle cx="{x+cw-124:.1f}" cy="{y+28}" r="4" fill="{LIME}"><animate attributeName="opacity" values="1;.25;1" dur="1.6s" repeatCount="indefinite"/></circle>
-{t(x+cw-114, y+32, "LIVE", 11, LIME, 700, extra='letter-spacing="1.5"')}
-{t(x+cw-22, y+32, "★ " + str(meta.get("stars", 0)), 12, ACC2, 700, anchor="end")}
+<circle cx="{x+cw-(124 if meta.get("stars") else 74):.1f}" cy="{y+28}" r="4" fill="{LIME}"><animate attributeName="opacity" values="1;.25;1" dur="1.6s" repeatCount="indefinite"/></circle>
+{t(x+cw-(114 if meta.get("stars") else 64), y+32, "LIVE", 11, LIME, 700, extra='letter-spacing="1.5"')}
+{t(x+cw-22, y+32, "★ " + str(meta.get("stars", 0)), 12, ACC2, 700, anchor="end") if meta.get("stars") else ""}
 {t(x+22, y+68, p["title"], 23, TXT, 800, SANS)}
 {t(x+22, y+92, "↗ " + p.get("domain", ""), 12.5, ACC, 600)}
 {''.join(t(x+22, y+118+j*19, l, 12.5, DIM) for j, l in enumerate(lines[:2]))}
@@ -600,14 +637,15 @@ def card_work(d):
             if len(wrap(desc, 36)) > 2:
                 lines[1] = lines[1][:33].rstrip() + "…"
             foot = m.get("homepage", "").replace("https://", "").replace("http://", "").rstrip("/")
-            foot = ("↗ " + foot[:30]) if foot else ("updated " + fmt_date(m.get("pushed", "")))
+            room = int((cw2 - 60 - 7 * len(lang or "—")) / 6.4) - 2
+            foot = ("↗ " + (foot if len(foot) <= room else foot[:room-1] + "…")) if foot else ("updated " + fmt_date(m.get("pushed", "")))
             badge = ""
             if m.get("archived"):
                 badge = t(x + cw2 - 18, y + 30, "ARCHIVED", 9.5, DIM, 700, anchor="end", extra='letter-spacing="1.2"')
             parts.append(f"""<g opacity="0">{fade(.6 + j * .08, .5, 10)}
 <rect x="{x:.1f}" y="{y}" width="{cw2:.1f}" height="{ch2}" rx="14" fill="#051210" fill-opacity=".8" stroke="{EDGE}" stroke-opacity=".2"/>
 {t(x+18, y+30, name, 15, TXT, 800, SANS)}
-{badge or t(x+cw2-18, y+30, "★ " + str(m.get("stars", 0)), 12, ACC2, 700, anchor="end")}
+{badge or (t(x+cw2-18, y+30, "★ " + str(m.get("stars", 0)), 12, ACC2, 700, anchor="end") if m.get("stars") else live_pill(x+cw2-18, y+30, bool(m.get("homepage"))))}
 {''.join(t(x+18, y+56+k*18, l, 11.5, DIM) for k, l in enumerate(lines))}
 <circle cx="{x+22:.1f}" cy="{y+ch2-22}" r="4.5" fill="{lc}"/>
 {t(x+32, y+ch2-18, lang or "—", 11, DIM2, 600)}
